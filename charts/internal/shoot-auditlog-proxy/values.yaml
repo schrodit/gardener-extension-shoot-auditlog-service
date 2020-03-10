@@ -1,0 +1,38 @@
+seedNamespace: shoot--project--shootname
+
+nameOverride: ""
+fullnameOverride: auditlog-proxy
+
+replicaCount: 1
+
+svc:
+  name: "shoot-auditlog-proxy"
+
+images:
+  auditlog-proxy: any-repo:any-tag
+
+resources:
+  requests:
+   cpu: 100m
+   memory: 128Mi
+  limits:
+   cpu: 200m
+   memory: 384Mi
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+# priorityClassName: ""
+
+configuration:
+  serverPortHttp: 8080
+  serverPortHttps: 8083
+  provider: standard
+  providerConfig:
+    test: 1
+    test2: a
+
+tls:
+  secretName: ""
+
+additionalConfiguration: []

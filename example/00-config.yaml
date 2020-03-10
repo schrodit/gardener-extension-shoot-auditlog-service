@@ -1,0 +1,3 @@
+---
+apiVersion: shoot-auditlog-service.extensions.config.gardener.cloud/v1alpha1
+kind: Configuration

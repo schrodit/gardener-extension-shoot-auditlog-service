@@ -1,0 +1,29 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: {{ include "shoot-auditlog-grafana.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    helm.sh/chart: {{ include "shoot-auditlog-grafana.chart" . }}
+    app.kubernetes.io/name: {{ include "shoot-auditlog-grafana.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    kubernetes.io/ingress.class: nginx
+spec:
+  tls:
+    {{- range .Values.ingress.hosts }}
+  - secretName: {{ required ".secretName is required" .secretName }}
+    hosts:
+    - {{ required ".hostName is required" .hostName }}
+  {{- end }}
+  rules:
+    {{- $svcName := (include "shoot-auditlog-grafana.name" .) -}}
+    {{- range .Values.ingress.hosts }}
+  - host: {{ required ".hostName is required" .hostName }}
+    http:
+      paths:
+      - backend:
+          serviceName: {{ $svcName }}
+          servicePort: 3000
+        path: /
+  {{- end }}

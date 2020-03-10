@@ -1,0 +1,13 @@
+---
+apiVersion: proxy.shoot-auditlog-service.extensions.config.gardener.cloud/v1alpha1
+kind: Configuration
+
+provider: elasticsearch
+providerConfig: {"endpoint":"http://elasticsearch-logging:9200","index":"auditlogs","password":"abc", "username":"admin"}
+webhookConfiguration:
+  httpsPort: 0
+  httpPort: 8080
+
+  tls:
+    certFile: abc
+    keyFile: abc

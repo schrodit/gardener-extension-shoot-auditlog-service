@@ -1,0 +1,11 @@
+apiVersion: audit.k8s.io/v1
+kind: EventList
+metadata:
+  name: test
+items:
+- apiVersion: audit.k8s.io/v1
+  kind: Event
+  level: Metadata
+  user:
+    username: demouser
+  objectRef: {}

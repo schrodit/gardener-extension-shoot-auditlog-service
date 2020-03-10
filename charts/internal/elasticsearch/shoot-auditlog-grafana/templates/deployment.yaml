@@ -1,0 +1,135 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "shoot-auditlog-grafana.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    helm.sh/chart: {{ include "shoot-auditlog-grafana.chart" . }}
+    app.kubernetes.io/name: {{ include "shoot-auditlog-grafana.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+spec:
+  revisionHistoryLimit: 0
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "shoot-auditlog-grafana.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        checksum/dashboards-json-config: {{ include (print $.Template.BasePath "/dashboards-json-configmap.yaml") . | sha256sum }}
+        {{- if .Values.podAnnotations }}
+{{ toYaml .Values.podAnnotations | indent 8 }}
+        {{- end }}
+      labels:
+        app.kubernetes.io/name: {{ include "shoot-auditlog-grafana.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        networking.gardener.cloud/to-elasticsearch: allowed
+    spec:
+      containers:
+      - name: {{ .Chart.Name }}
+        image: {{ index .Values.images "grafana" }}
+        imagePullPolicy: Always
+        volumeMounts:
+        - name: config
+          mountPath: "/etc/grafana/grafana.ini"
+          subPath: grafana.ini
+        - name: storage
+          mountPath: "/var/lib/grafana"
+        {{- if .Values.dashboards }}
+        {{- range $provider, $dashboards := .Values.dashboards }}
+        {{- range $key, $value := $dashboards }}
+        {{- if (or (hasKey $value "json") (hasKey $value "file")) }}
+        - name: dashboards-{{ $provider }}
+          mountPath: "/var/lib/grafana/dashboards/{{ $provider }}/{{ $key }}.json"
+          subPath: "{{ $key }}.json"
+        {{- end }}
+        {{- end }}
+        {{- end }}
+        {{- end -}}
+        {{- if .Values.datasources }}
+        - name: config
+          mountPath: "/etc/grafana/provisioning/datasources/datasources.yaml"
+          subPath: datasources.yaml
+        {{- end }}
+        {{- if .Values.dashboardProviders }}
+        - name: config
+          mountPath: "/etc/grafana/provisioning/dashboards/dashboardproviders.yaml"
+          subPath: dashboardproviders.yaml
+        {{- end }}
+        ports:
+        - containerPort: 80
+          protocol: TCP
+        - containerPort: 3000
+          protocol: TCP
+        livenessProbe:
+          httpGet:
+            path: /api/health
+            port: 3000
+          initialDelaySeconds: 60
+          timeoutSeconds: 30
+          failureThreshold: 10
+        resources:
+          {{- toYaml .Values.resources | nindent 10 }}
+        env:
+        - name: GF_SECURITY_ADMIN_USER
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.admin.existingSecret | default ((include "shoot-auditlog-grafana.fullname" .) "-secret") }}
+              key: {{ .Values.admin.userKey | default "admin-user" }}
+        - name: GF_SECURITY_ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.admin.existingSecret | default ((include "shoot-auditlog-grafana.fullname" .) "-secret") }}
+              key: {{ .Values.admin.passwordKey | default "admin-password" }}
+      volumes:
+      - name: config
+        configMap:
+          name: {{ template "shoot-auditlog-grafana.fullname" . }}
+      - name: storage
+        emptyDir: {}
+      {{- if .Values.dashboards }}
+      {{- range keys .Values.dashboards }}
+      - name: dashboards-{{ . }}
+        configMap:
+          name: {{ template "shoot-auditlog-grafana.fullname" $ }}-dashboards-{{ . }}
+      {{- end }}
+      {{- end }}
+      {{- if .Values.priorityClassName }}
+      priorityClassName: {{ .Values.priorityClassName }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "shoot-auditlog-grafana.name" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ include "shoot-auditlog-grafana.name" . }}
+spec:
+  selector:
+    app.kubernetes.io/name: {{ include "shoot-auditlog-grafana.name" . }}
+  ports:
+  - name: http
+    protocol: TCP
+    port: 80
+    targetPort: 80
+  - name: https
+    protocol: TCP
+    port: 3000
+    targetPort: 3000

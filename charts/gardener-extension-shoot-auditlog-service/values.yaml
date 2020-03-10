@@ -1,0 +1,32 @@
+image:
+  repository: eu.gcr.io/gardener-project/demo/extensions/shoot-auditlog-service
+  tag: latest
+  pullPolicy: Always
+
+replicaCount: 1
+
+resources:
+  requests:
+   cpu: "50m"
+   memory: "64Mi"
+  limits:
+   cpu: "50m"
+   memory: "128Mi"
+
+controllers:
+  concurrentSyncs: 5
+  ignoreOperationAnnotation: false
+
+certificateConfig: {}
+
+disableControllers: []
+
+webhookConfig:
+  serverPort: 443
+
+# imageVectorOverwrite: |
+#   images:
+#   - name: cert-management
+#     sourceRepository: github.com/gardener/cert-management
+#     repository: eu.gcr.io/gardener-project/cert-controller-manager
+#     tag: "0.2.9"

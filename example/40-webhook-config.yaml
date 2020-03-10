@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: extension-shoot-auditlog-kubecfg
+  namespace: shoot--core--audit-demo
+stringData:
+  kubeconfig: |
+    clusters:
+    - cluster:
+        server: https://my-webhook.com
+      name: auditlog-proxy
+    contexts:
+    - context:
+        cluster: auditlog-proxy
+        user: auditlog-proxy-auth
+      name: auditlog-proxy
+    current-context: auditlog-proxy
+    preferences: {}
+    users:
+    - name: auditlog-proxy-auth
+      user:
+        token: abc
+  tls.crt: ""
+  tls.key: ""
+type: Opaque
+

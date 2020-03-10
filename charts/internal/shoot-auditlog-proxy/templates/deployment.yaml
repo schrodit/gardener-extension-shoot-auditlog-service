@@ -1,0 +1,105 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "auditlog-proxy.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    helm.sh/chart: {{ include "auditlog-proxy.chart" . }}
+    app.kubernetes.io/name: {{ include "auditlog-proxy.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+spec:
+  revisionHistoryLimit: 0
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "auditlog-proxy.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ include "auditlogconfig" . | sha256sum }}
+        {{- if .Values.podAnnotations }}
+{{ toYaml .Values.podAnnotations | indent 8 }}
+        {{- end }}
+      labels:
+        app.kubernetes.io/name: {{ include "auditlog-proxy.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        networking.gardener.cloud/to-elasticsearch: allowed
+        networking.gardener.cloud/from-shoot-apiserver: allowed
+    spec:
+      containers:
+      - name: {{ .Chart.Name }}
+        image: {{ index .Values.images "auditlog-proxy" }}
+        imagePullPolicy: Always
+        command:
+        - /shoot-auditlog-proxy
+        - --config=/etc/auditlog-proxy/config/config.yaml
+        {{- range $idx, $flag := .Values.additionalConfiguration }}
+        - {{ $flag }}
+        {{- end }}
+        volumeMounts:
+        - name: auditlog-proxy-config
+          mountPath: /etc/auditlog-proxy/config
+          readOnly: true
+        - name: auditlog-proxy-tls
+          mountPath: /etc/auditlog-proxy/tls
+          readOnly: true
+        ports:
+        - containerPort: {{ .Values.configuration.serverPortHttp }}
+          protocol: TCP
+        - containerPort: {{ .Values.configuration.serverPortHttps }}
+          protocol: TCP
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: {{ .Values.configuration.serverPortHttp }}
+            scheme: HTTP
+          initialDelaySeconds: 30
+          timeoutSeconds: 5
+        resources:
+          {{- toYaml .Values.resources | nindent 10 }}
+      volumes:
+      - name: auditlog-proxy-config
+        secret:
+          secretName: shoot-auditlog-proxy.config
+      - name: auditlog-proxy-tls
+        secret:
+          secretName: {{ .Values.tls.secretName }}
+      serviceAccountName: {{ include "auditlog-proxy.name" . }}
+      {{- if .Values.priorityClassName }}
+      priorityClassName: {{ .Values.priorityClassName }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.svc.name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ include "auditlog-proxy.name" . }}
+spec:
+  selector:
+    app.kubernetes.io/name: {{ include "auditlog-proxy.name" . }}
+  ports:
+  - name: http
+    protocol: TCP
+    port: {{ .Values.configuration.serverPortHttp }}
+    targetPort: {{ .Values.configuration.serverPortHttp }}
+  - name: https
+    protocol: TCP
+    port: {{ .Values.configuration.serverPortHttps }}
+    targetPort: {{ .Values.configuration.serverPortHttps }}

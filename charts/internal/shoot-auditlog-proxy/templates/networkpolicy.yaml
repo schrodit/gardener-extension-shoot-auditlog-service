@@ -1,0 +1,23 @@
+apiVersion: extensions/v1beta1
+kind: NetworkPolicy
+metadata:
+  annotations:
+    gardener.cloud/description: |
+      Allows Egress from pods labeled with 'networking.gardener.cloud/to-auditlog-proxy=allowed'
+      to the auditlog proxy.
+  name: allow-to-auditlog-proxy
+  namespace: {{ .Release.Namespace }}
+spec:
+  egress:
+  - ports:
+    - port: {{ .Values.configuration.serverPortHttps }}
+      protocol: TCP
+    to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: {{ include "auditlog-proxy.name" . }}
+  podSelector:
+    matchLabels:
+      networking.gardener.cloud/to-auditlog-proxy: allowed
+  policyTypes:
+  - Egress

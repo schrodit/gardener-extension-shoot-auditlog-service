@@ -1,0 +1,113 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "gnetId": null,
+  "graphTooltip": 0,
+  "id": 1,
+  "links": [],
+  "panels": [
+    {
+      "columns": [
+        {
+          "text": "RequestReceivedTimestamp",
+          "value": "RequestReceivedTimestamp"
+        },
+        {
+          "text": "ObjectRef.Resource",
+          "value": "ObjectRef.Resource"
+        },
+        {
+          "text": "ObjectRef.Namespace",
+          "value": "ObjectRef.Namespace"
+        },
+        {
+          "text": "ObjectRef.Name",
+          "value": "ObjectRef.Name"
+        },
+        {
+          "text": "User.Username",
+          "value": "User.Username"
+        },
+        {
+          "text": "Verb",
+          "value": "Verb"
+        }
+      ],
+      "datasource": "Logging",
+      "fontSize": "100%",
+      "gridPos": {
+        "h": 22,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 2,
+      "links": [],
+      "options": {},
+      "pageSize": null,
+      "showHeader": true,
+      "sort": {
+        "col": 0,
+        "desc": true
+      },
+      "styles": [
+        {
+          "alias": "Time",
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "pattern": "RequestReceivedTimestamp",
+          "type": "date"
+        }
+      ],
+      "targets": [
+        {
+          "bucketAggs": [],
+          "metrics": [
+            {
+              "field": "select field",
+              "id": "1",
+              "meta": {},
+              "settings": {
+                "size": 500
+              },
+              "type": "raw_document"
+            }
+          ],
+          "refId": "A",
+          "timeField": "RequestReceivedTimestamp"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "AuditLogs",
+      "transform": "json",
+      "type": "table"
+    }
+  ],
+  "schemaVersion": 20,
+  "style": "dark",
+  "tags": [],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-7d",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "",
+  "title": "AuditLogs",
+  "uid": "L7IivfXZz",
+  "version": 1
+}

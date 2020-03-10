@@ -1,0 +1,9 @@
+images:
+- name: auditlog-proxy
+  sourceRepository: github.com/gardener/shoot-auditlog-proxy
+  repository: eu.gcr.io/gardener-project/demo/extensions/shoot-auditlog-proxy
+  tag: "v0.0.0-dev"
+- name: grafana
+  sourceRepository: github.com/grafana/grafana
+  repository: grafana/grafana
+  tag: 6.4.2

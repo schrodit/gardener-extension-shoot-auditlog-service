@@ -1,0 +1,8 @@
+apiVersion: v1
+name: shoot-auditlog-grafana
+version: 4.0.4
+description: The leading tool for querying and visualizing time series and metrics.
+home: https://grafana.net
+icon: https://raw.githubusercontent.com/grafana/grafana/master/public/img/logo_transparent_400x.png
+sources:
+  - https://github.com/grafana/grafana
